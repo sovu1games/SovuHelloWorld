@@ -1,7 +1,7 @@
 {
   "SOVU-HELLO-WORLD": {
     "Title": "Hello World",
-    "Hello": "Hello, {name}! The module pipeline works.",
+    "Hello": "Hello, {name}! The module pipeline works (v{version}).",
     "Settings": {
       "Greet": {
         "Name": "Greet on load",

@@ -21,6 +21,16 @@ export async function greetingVisibility({ page, isGM, id }) {
     : { pass: count === 0, message: `player sees ${count} greeting(s)` };
 }
 
+export async function greetingVersion({ page, isGM, id }) {
+  if (!isGM) return { pass: true, message: "skipped for players" };
+  const r = await page.evaluate(id => {
+    const version = game.modules.get(id).version;
+    const latest = game.messages.filter(m => m.getFlag(id, "greeting")).at(-1);
+    return { version, text: latest?.content ?? "" };
+  }, id);
+  return { pass: r.text.includes(`(v${r.version})`), message: `latest greeting names v${r.version}: ${r.text.includes(`(v${r.version})`)}` };
+}
+
 export async function greetingColour({ page, isGM, id }) {
   if (!isGM) return { pass: true, message: "skipped for players" };
   await page.evaluate(() => ui.sidebar.changeTab("chat", "primary"));

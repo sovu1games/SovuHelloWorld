@@ -1,0 +1,71 @@
+# Release a Foundry VTT module when a vX.Y.Z tag is pushed.
+# Produces a GitHub release with two assets: module.json and module.zip.
+# module.json "version" must already equal the tag without its "v" (the job checks).
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write            # create the release and upload assets
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+      REPO_URL: https://github.com/${{ github.repository }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check module.json version matches the tag
+        run: |
+          VERSION="${TAG#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          MANIFEST_VERSION="$(jq -r .version module.json)"
+          if [ "$MANIFEST_VERSION" != "$VERSION" ]; then
+            echo "::error::module.json version is '$MANIFEST_VERSION' but the tag is '$TAG'"
+            exit 1
+          fi
+
+      - name: Check manifest keys and id
+        run: |
+          BAD="$(jq -r '[keys[] | select(IN("name","minimumCoreVersion","compatibleCoreVersion","maximumCoreVersion","dependencies","system","systems","author"))] | join(", ")' module.json)"
+          if [ -n "$BAD" ]; then echo "::error::module.json uses removed keys: $BAD"; exit 1; fi
+          ID="$(jq -r .id module.json)"
+          echo "$ID" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*$' || { echo "::error::bad module id '$ID'"; exit 1; }
+          # V13+ schema: styles are objects with a "src" (plain strings are deprecated)
+          [ "$(jq -r '[.styles[]? | type] | all(. == "object")' module.json)" = "true" ] || { echo "::error::styles must be {\"src\": ...} objects"; exit 1; }
+          for key in title description compatibility; do
+            [ "$(jq -r "has(\"$key\")" module.json)" = "true" ] || { echo "::error::module.json has no '$key'"; exit 1; }
+          done
+
+      - name: Stamp url, manifest and download
+        run: |
+          jq --arg url "$REPO_URL" \
+             --arg manifest "$REPO_URL/releases/latest/download/module.json" \
+             --arg download "$REPO_URL/releases/download/$TAG/module.zip" \
+             '.url = $url | .manifest = $manifest | .download = $download' \
+             module.json > module.stamped.json
+          mv module.stamped.json module.json
+          cat module.json
+
+      # For a module that ships compendium packs, insert here: actions/setup-node,
+      # npm ci, and `node build-packs.mjs` (compilePack for each packs/_source/<name>).
+
+      - name: Build module.zip (module.json at the zip root)
+        run: |
+          SHIP="module.json README.md CHANGELOG.md LICENSE scripts templates styles lang assets packs"
+          FILES=""
+          for f in $SHIP; do [ -e "$f" ] && FILES="$FILES $f"; done
+          zip -r module.zip $FILES -x '*.lock' -x 'packs/_source/*'
+          unzip -l module.zip
+          unzip -Z1 module.zip | grep -qx 'module.json' || { echo "::error::module.json is not at the zip root"; exit 1; }
+
+      - name: Publish the release (draft, attach, publish)
+        run: |
+          gh release create "$TAG" module.json module.zip \
+            --draft --verify-tag --title "$TAG" --generate-notes
+          gh release edit "$TAG" --draft=false --latest

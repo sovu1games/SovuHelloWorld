@@ -1,0 +1,25 @@
+# Build output and dependencies (only present if a module uses Node)
+node_modules/
+dist/
+*.zip
+.npm/
+
+# Compiled compendium packs (LevelDB): commit packs/_source/ instead
+packs/*/
+!packs/_source/
+
+# Foundry writes <id>.lock into the module folder when it is locked in Setup.
+# A shipped .lock blocks users' updates forever (foundryvtt#5676).
+*.lock
+
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+
+# Editors and OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp
+.env

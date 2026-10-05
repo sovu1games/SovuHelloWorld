@@ -1,0 +1,12 @@
+{
+  "SOVU-HELLO-WORLD": {
+    "Title": "Hello World",
+    "Hello": "Hello, {name}! The module pipeline works.",
+    "Settings": {
+      "Greet": {
+        "Name": "Greet on load",
+        "Hint": "Whisper a greeting to the GM when the world loads."
+      }
+    }
+  }
+}

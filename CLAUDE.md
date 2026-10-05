@@ -31,6 +31,7 @@ Flags this module writes: `flags.sovu-hello-world.greeting` on the greeting Chat
 Harness checks in `tests/checks.mjs`, run in `ModuleDev` as Gamemaster and Tester:
 - `greetingSetting`, `settingLocalized`: the setting is registered and localized
 - `greetingVisibility`: the GM sees the greeting, the player doesn't
+- `greetingVersion`: the latest greeting names the loaded version
 - `greetingColour`: the greeting is in the chat log, styled
 
 Not covered by the harness (look yourself): how the greeting looks.

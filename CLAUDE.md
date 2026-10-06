@@ -1,6 +1,6 @@
 # SovuHelloWorld — Sovu Hello World
 
-Foundry VTT module for V14. Repo `sovu1games/SovuHelloWorld` (public). Shared rules: `..\CLAUDE.md`.
+Foundry VTT module for V14. Repo `sovu1games/SovuHelloWorld` (public). Shared rules: `..\..\CLAUDE.md`.
 
 ## Identity (permanent)
 - id: `sovu-hello-world`
